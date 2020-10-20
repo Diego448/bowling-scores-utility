@@ -12,6 +12,7 @@ import java.util.HashMap;
 public class BowlingGame {
     Integer frameNumber = 10;
     Map<String, List<Frame>> playerFrames;
+    Integer temporalScore = 0;
 
     
     public BowlingGame(String file) throws IOException {
@@ -41,7 +42,7 @@ public class BowlingGame {
         List<Frame> frameList = this.playerFrames.get(currentData.playerName);
         frameNumber = getFrameNumber(frameList);
         Frame newFrame;
-        if(previousData.playerName.equals(currentData.playerName)) {
+        if(currentData.knockedPins != 10 && previousData.playerName.equals(currentData.playerName)) {
             newFrame = frameList.get(frameList.size() - 1); 
         } else {
             newFrame = new Frame(frameNumber);
@@ -63,6 +64,13 @@ public class BowlingGame {
     }
 
     public void showScores() {
+        System.out.println("Frame scores: ");
+        showFrameScores();
+        System.out.println("Total scores: ");
+        showTotalScores();
+    }
+
+    public void showFrameScores() {
         for(String player : this.playerFrames.keySet()) {
             List<Frame> currentPlayerFrames = new LinkedList<>(this.playerFrames.get(player));
             printScoreHeader();
@@ -74,11 +82,42 @@ public class BowlingGame {
         }
     }
 
+    public void showTotalScores() {
+        for(String player : this.playerFrames.keySet()) {
+            List<Frame> currentPlayerFrames = new LinkedList<>(this.playerFrames.get(player));
+            System.out.print(player + ": ");
+            for(int i = 0; i < 9; i++) {
+                Frame currentFrame = currentPlayerFrames.get(i);
+                Frame nextFrame = currentPlayerFrames.get(i + 1);
+                System.out.print(calculateScores(currentFrame, nextFrame) + "\t");
+            }
+            System.out.print(calculateLastScore(currentPlayerFrames.get(9)));
+            this.temporalScore = 0;
+            System.out.print("\n");
+        }
+    }
+
+    public Integer calculateScores(Frame currentFrame, Frame nextFrame) {
+        Integer currentFrameTotal;
+        Integer nextFrameScore = nextFrame.getKnockedPins().get(0);
+        if(currentFrame.getKnockedPins().get(0) == 10) {
+            currentFrameTotal = 20;
+        } else {
+            currentFrameTotal = currentFrame.getKnockedPins().stream().mapToInt(i -> i.intValue()).sum();
+        }
+        this.temporalScore += currentFrameTotal + nextFrameScore;
+        return temporalScore;
+    }
+
+    public Integer calculateLastScore(Frame lastFrame) {
+        return temporalScore + lastFrame.getKnockedPins().stream().mapToInt(i -> i.intValue()).sum();
+    }
+
     public void printScoreHeader() {
-        System.out.print("Frame\t");
+        System.out.print("Frame\t");    
         for(int i = 1; i < 11; i++) {
             System.out.print(i + "\t");
-        }
+        }    
         System.out.print("\n");
     }
 
